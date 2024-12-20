@@ -22,16 +22,28 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				PropertyList.plist,
 			);
 			target = 5DFA6B4B2D0F6A27007CC4E3 /* MyTripsaApp */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		5DC67D142D147D6400DB7091 /* Exceptions for "MyTripsaApp" folder in "Compile Sources" phase from "MyTripsaApp" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 5DFA6B482D0F6A27007CC4E3 /* Sources */;
+			membershipExceptions = (
+				PropertyList.plist,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5DFA6B4E2D0F6A27007CC4E3 /* MyTripsaApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5DFA6B8E2D0F8622007CC4E3 /* Exceptions for "MyTripsaApp" folder in "MyTripsaApp" target */,
+				5DC67D142D147D6400DB7091 /* Exceptions for "MyTripsaApp" folder in "Compile Sources" phase from "MyTripsaApp" target */,
 			);
 			path = MyTripsaApp;
 			sourceTree = "<group>";

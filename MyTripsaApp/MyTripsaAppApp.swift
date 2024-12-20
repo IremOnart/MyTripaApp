@@ -17,6 +17,7 @@ struct MyTripsAppApp: App {
     var body: some Scene {
         WindowGroup {
             LoginView() // Launch the Home Page as the main screen
+            
         }
     }
 }
@@ -28,6 +29,8 @@ struct HomePageView: View {
         Trip(id: 2, name: "Paris Turu", startDate: "1 Ocak 2025", endDate: "5 Ocak 2025", image: "paris")
     ]
     @State private var userName: String = ""
+    var service: MyTripsaAppServiceProtocol = MyTripsaAppService()
+    var deneme: String?
     
     var body: some View {
         Button(action: {
@@ -83,6 +86,11 @@ struct HomePageView: View {
                 }
             }
             .navigationBarHidden(true)
+        }.onAppear {
+            service.fetchFeatures(url: ENV.Feature_API) { [self] result in
+                /*   guard let self = self else { return } */ // self'in nil olmadığından emin olun
+                print(result.features.first?.properties.name)
+            }
         }
     }
     
@@ -166,22 +174,6 @@ struct Trip: Identifiable {
     let image: String
 }
 
-//// Trip Details View (Example)
-//struct TripDetailsView: View {
-//    let trip: Trip
-//
-//    var body: some View {
-//        VStack {
-//            Text("Seyahat Detayları")
-//                .font(.largeTitle)
-//            Text(trip.name)
-//                .font(.title2)
-//                .padding(.top)
-//            Spacer()
-//        }
-//        .navigationTitle(trip.name)
-//    }
-//}
 
 // Preview
 //struct HomePageView_Previews: PreviewProvider {
