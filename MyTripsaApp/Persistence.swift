@@ -29,6 +29,9 @@ struct PersistenceController {
         return result
     }()
 
+    var viewContext: NSManagedObjectContext {
+        container.viewContext
+    }
     let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {

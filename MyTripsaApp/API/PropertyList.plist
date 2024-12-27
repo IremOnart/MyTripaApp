@@ -1,3 +1,4 @@
 {
 	"Features_APIKEY" = "https://api.geoapify.com/v2/places?categories=tourism.attraction&filter=rect:11.573106549898483,48.13898913611139,11.57704581350751,48.13666585409989&limit=20&apiKey=af19395514e54b578f18ea015f7dbb9d";
+	GeoapifyAPIKey = "af19395514e54b578f18ea015f7dbb9d";
 }

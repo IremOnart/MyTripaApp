@@ -6,14 +6,16 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct AddTripView: View {
     @State private var tripName: String = ""
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date()
-    @Environment(\.presentationMode) var presentationMode
     @Binding var trips: [Trip] // Binding to pass trips back to the parent view
-
+    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.managedObjectContext) var managedObjectContext // Core Data Context
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -66,24 +68,25 @@ struct AddTripView: View {
             return
         }
 
-        // Add the new trip to the trips array
-        let newTrip = Trip(id: trips.count + 1, name: tripName, startDate: formatDate(startDate), endDate: formatDate(endDate), image: "defaultImage")
-        trips.append(newTrip)
+        // Create a new Trip entity
+        let newTrip = TripEntity(context: managedObjectContext)
+        newTrip.id = UUID()
+        newTrip.name = tripName
+        newTrip.startDate = startDate
+        newTrip.endDate = endDate
+        print("ID: \(UUID())")
+        print("Name: \(tripName)")
+        print("Start Date: \(startDate)")
+        print("End Date: \(endDate)")
 
-        // Dismiss the view and return to the home page
-        presentationMode.wrappedValue.dismiss()
-    }
-    
-    // Helper function to format Date as a String
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        return formatter.string(from: date)
+        // Save to Core Data
+        do {
+            try managedObjectContext.save()
+            presentationMode.wrappedValue.dismiss()
+            print("başarılı kaydetme")
+        } catch {
+            // Handle Core Data saving error
+            print("Failed to save trip: \(error.localizedDescription)")
+        }
     }
 }
-
-//struct AddTripView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        AddTripView(trips: .constant([]))
-//    }
-//}

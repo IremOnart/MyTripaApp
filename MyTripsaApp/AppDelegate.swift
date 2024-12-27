@@ -23,6 +23,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
-var ENV: APIKeyable {
-    return ProdENV()
-}
+//var ENV: APIKeyable {
+//    return ProdENV()
+//}

@@ -18,7 +18,7 @@ struct LoginView: View {
             VStack {
                 if isSignedIn {
                     // Giriş başarılıysa HomePageView göster
-                    HomePageView()
+                    TabbarView()
                 } else {
                     Spacer()
                     
@@ -64,7 +64,7 @@ struct LoginView: View {
                     
                     // Navigation to HomePageView
                     NavigationLink(
-                        destination: HomePageView(),
+                        destination: TabbarView(),
                         isActive: $navigateToHome
                     ) {
                         EmptyView()
