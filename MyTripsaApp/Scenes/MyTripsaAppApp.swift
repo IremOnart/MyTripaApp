@@ -177,13 +177,32 @@ struct TripCardView: View {
 }
 
 // Trip Model
-struct Trip: Identifiable {
+struct Trip: Identifiable, Hashable {
     let id: UUID
     let name: String
     let startDate: String
     let endDate: String
     let image: String
+
+    // Hashable için gerekli fonksiyon
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(startDate)
+        hasher.combine(endDate)
+        hasher.combine(image)
+    }
+
+    // Equatable için gerekli fonksiyon (bu genellikle otomatik olarak sağlanır, ancak istenirse manuel de yapılabilir)
+    static func ==(lhs: Trip, rhs: Trip) -> Bool {
+        return lhs.id == rhs.id &&
+            lhs.name == rhs.name &&
+            lhs.startDate == rhs.startDate &&
+            lhs.endDate == rhs.endDate &&
+            lhs.image == rhs.image
+    }
 }
+
 
 
 // Preview

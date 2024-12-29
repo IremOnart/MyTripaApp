@@ -21,124 +21,131 @@ struct TripDetailsView: View {
         Expense(id: 2, name: "Otel Konaklama", amount: 500.0, date: "16 Aralık 2024")
     ]
     
+    @State private var isActive = false
+    let persistenceController = PersistenceController.shared
+    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.presentationMode) var presentationMode
+    
     var body: some View {
-        VStack {
-            // Header Section
-            VStack(alignment: .leading) {
-                Text(trip.name)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                Text("\(trip.startDate) - \(trip.endDate)")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-            }
-            .padding()
-            
-            // TabView for Locations and Expenses
-            TabView {
-                // Locations Tab
+            NavigationView {
                 VStack {
-                    Text("Konumlar")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .padding(.top)
+                    // Header Section
+                    VStack(alignment: .leading) {
+                        Text(trip.name)
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Text("\(trip.startDate) - \(trip.endDate)")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
                     
-                    List {
-                        ForEach(locations) { location in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(location.name)
-                                        .font(.headline)
-                                    Text(location.description)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                    Text(location.date)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                    // TabView for Locations and Expenses
+                    TabView {
+                        // Locations Tab
+                        VStack {
+                            Text("Konumlar")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .padding(.top)
+                            
+                            List {
+                                ForEach(locations) { location in
+                                    HStack {
+                                        VStack(alignment: .leading) {
+                                            Text(location.name)
+                                                .font(.headline)
+                                            Text(location.description)
+                                                .font(.subheadline)
+                                                .foregroundColor(.gray)
+                                            Text(location.date)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                    }
                                 }
-                                Spacer()
+                                .onDelete(perform: deleteLocation)
+                            }
+                            
+                            NavigationLink(destination: AddLocationView().environment(\.managedObjectContext, persistenceController.viewContext)) {
+                                HStack {
+                                    Image(systemName: "plus")
+                                        .font(.title)
+                                    Text("Yeni Konum Ekle")
+                                        .fontWeight(.semibold)
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .padding()
                             }
                         }
-                        .onDelete(perform: deleteLocation)
-                    }
-                    
-                    Button(action: {
-                        print("Yeni konum ekleye tıklandı")
-                    }) {
-                        HStack {
-                            Image(systemName: "plus")
-                            Text("Yeni Konum Ekle")
+                        .tabItem {
+                            Label("Konumlar", systemImage: "mappin.and.ellipse")
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding()
-                    }
-                }
-                .tabItem {
-                    Label("Konumlar", systemImage: "mappin.and.ellipse")
-                }
-                
-                // Expenses Tab
-                VStack {
-                    Text("Giderler")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .padding(.top)
-                    
-                    List {
-                        ForEach(expenses) { expense in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(expense.name)
-                                        .font(.headline)
-                                    Text("$\(expense.amount, specifier: "%.2f")")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                    Text(expense.date)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                        
+                        // Expenses Tab
+                        VStack {
+                            Text("Giderler")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .padding(.top)
+                            
+                            List {
+                                ForEach(expenses) { expense in
+                                    HStack {
+                                        VStack(alignment: .leading) {
+                                            Text(expense.name)
+                                                .font(.headline)
+                                            Text("$\(expense.amount, specifier: "%.2f")")
+                                                .font(.subheadline)
+                                                .foregroundColor(.gray)
+                                            Text(expense.date)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                    }
                                 }
-                                Spacer()
+                                .onDelete(perform: deleteExpense)
+                            }
+                            
+                            Button(action: {
+                                print("Yeni gider ekleye tıklandı")
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus")
+                                    Text("Yeni Gider Ekle")
+                                }
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .padding()
                             }
                         }
-                        .onDelete(perform: deleteExpense)
-                    }
-                    
-                    Button(action: {
-                        print("Yeni gider ekleye tıklandı")
-                    }) {
-                        HStack {
-                            Image(systemName: "plus")
-                            Text("Yeni Gider Ekle")
+                        .tabItem {
+                            Label("Giderler", systemImage: "creditcard")
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding()
+                    }
+//                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            print("Seyahat düzenleme butonuna tıklandı")
+                        }) {
+                            Image(systemName: "pencil")
+                        }
                     }
                 }
-                .tabItem {
-                    Label("Giderler", systemImage: "creditcard")
-                }
-            }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    print("Seyahat düzenleme butonuna tıklandı")
-                }) {
-                    Image(systemName: "pencil")
-                }
             }
         }
-    }
     
     // Delete Handlers
     private func deleteLocation(at offsets: IndexSet) {
