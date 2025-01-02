@@ -28,6 +28,10 @@ extension TripEntity {
     public var wrappedName: String {
         name ?? "Unkown name"
     }
+    
+    public var wrappedId: UUID {
+        id ?? UUID()
+    }
     public var wrappedStartDate: Date {
         startDate ?? Date()
     }

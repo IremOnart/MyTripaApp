@@ -7,38 +7,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "CAD148E0-BDFE-4960-B1B8-23CD0E081B10"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MyTripsaApp/Scenes/MyTripsaAppApp.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "110"
-            endingLineNumber = "110"
-            landmarkName = "body"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "7E6ED6C6-A3BC-4F1C-90F1-2044829FC4C9"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "MyTripsaApp/Scenes/MyTripsaAppApp.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "111"
-            endingLineNumber = "111"
-            landmarkName = "body"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "FFC8E52C-220E-4E98-A55B-13C6AF17DFD0"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -62,8 +30,8 @@
             filePath = "MyTripsaApp/Scenes/MyTripsaAppApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
+            startingLineNumber = "57"
+            endingLineNumber = "57"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -78,8 +46,8 @@
             filePath = "MyTripsaApp/Scenes/MyTripsaAppApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "51"
-            endingLineNumber = "51"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>

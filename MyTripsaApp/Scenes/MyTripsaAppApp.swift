@@ -14,7 +14,14 @@ import FirebaseFirestoreInternal
 
 @main
 struct MyTripsAppApp: App {
-    
+    init() {
+        // Uygulama başladığında bildirim izni iste
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if granted {
+                print("Bildirim izni verildi")
+            }
+        }
+    }
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
         WindowGroup {

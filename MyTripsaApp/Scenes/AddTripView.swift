@@ -8,39 +8,54 @@
 import SwiftUI
 import CoreData
 import UserNotifications
-import BackgroundTasks
 
 struct AddTripView: View {
     @State private var tripName: String = ""
     @State private var startDate: Date = Date()
     @State private var endDate: Date = Date()
-    @Binding var trips: [Trip] // Binding to pass trips back to the parent view
+    @State private var startTime: Date = Date()
+    @State private var endTime: Date = Date()
+    @Binding var trips: [Trip]
     @Environment(\.presentationMode) var presentationMode
-    @Environment(\.managedObjectContext) var managedObjectContext // Core Data Context
+    @Environment(\.managedObjectContext) var managedObjectContext
     @State private var selectedImage: UIImage? = nil
     @State private var isImagePickerPresented: Bool = false
-    @State private var showAlert: Bool = false // Alert kontrolü için
+    @State private var showAlert: Bool = false
+    @StateObject private var notificationManager = NotificationManager.shared
     
     var body: some View {
         NavigationView {
-            VStack() {
-                // Title
+            VStack {
                 Text("Yeni Seyahat Ekle")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top)
                 
-                // Form
                 Form {
                     Section(header: Text("Seyahat Bilgileri")) {
                         TextField("Seyahat Adı", text: $tripName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                         
-                        DatePicker("Başlangıç Tarihi", selection: $startDate, displayedComponents: .date)
+                        // Başlangıç tarihi ve saati
+                        DatePicker("Başlangıç Tarihi",
+                                   selection: $startDate,
+                                   displayedComponents: .date).environment(\.timeZone, TimeZone.current)
                         
-                        DatePicker("Bitiş Tarihi", selection: $endDate, displayedComponents: .date)
+                        DatePicker("Başlangıç Saati",
+                                   selection: $startTime,
+                                   displayedComponents: .hourAndMinute).environment(\.timeZone, TimeZone.current)
+                        
+                        // Bitiş tarihi ve saati
+                        DatePicker("Bitiş Tarihi",
+                                   selection: $endDate,
+                                   displayedComponents: .date).environment(\.timeZone, TimeZone.current)
+                        
+                        DatePicker("Bitiş Saati",
+                                   selection: $endTime,
+                                   displayedComponents: .hourAndMinute).environment(\.timeZone, TimeZone.current)
                     }
                     
+                    // Mevcut görsel seçici bölümü aynı kalacak
                     Section(header: Text("Görsel")) {
                         VStack {
                             if let selectedImage = selectedImage {
@@ -79,9 +94,8 @@ struct AddTripView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 500) // Sınırlı alan
+                .frame(maxHeight: 500)
                 
-                // Save Button
                 Button(action: {
                     saveTrip()
                 }) {
@@ -95,59 +109,95 @@ struct AddTripView: View {
                         .padding(.horizontal)
                 }
                 .alert(isPresented: $showAlert) {
-                    Alert(title: Text("Hata"), message: Text("Seyahat adı boş olamaz."), dismissButton: .default(Text("Tamam")))
+                    Alert(title: Text("Hata"),
+                          message: Text("Seyahat adı boş olamaz."),
+                          dismissButton: .default(Text("Tamam")))
                 }
             }
             .padding(.horizontal)
-            .onAppear {
-                requestNotificationPermission()
-                scheduleBackgroundTask()
-            }
         }
     }
     
     private func saveTrip() {
-        // Eğer seyahat adı boşsa, uyarı göster ve kaydetme
         guard !tripName.trimmingCharacters(in: .whitespaces).isEmpty else {
             showAlert = true
             return
         }
-
+        
+        // Tarih ve saati birleştir
+        let startDateTime = combineDateAndTime(date: startDate, time: startTime)
+        let endDateTime = combineDateAndTime(date: endDate, time: endTime)
+        
+        // Kaydedilen tarihleri kontrol et
+        print("Kaydedilen başlangıç tarihi ve saati: \(startDateTime)")
+        print("Kaydedilen bitiş tarihi ve saati: \(endDateTime)")
+        
         let newTrip = TripEntity(context: managedObjectContext)
-        newTrip.id = UUID()
+        let tripId = UUID()
+        newTrip.id = tripId
         newTrip.name = tripName
-        newTrip.startDate = startDate
-        newTrip.endDate = endDate
-
+        newTrip.startDate = startDateTime
+        newTrip.endDate = endDateTime
+        
         if let selectedImage = selectedImage {
             let imageName = "\(UUID().uuidString).png"
             if let savedImageName = saveImageToDocumentsDirectory(image: selectedImage, imageName: imageName) {
                 newTrip.image = savedImageName
             }
         }
-
+        
         do {
             try managedObjectContext.save()
+            // Bildirimleri planla
+            notificationManager.scheduleTripNotifications(
+                tripId: tripId,
+                tripName: tripName,
+                startDate: startDateTime,
+                endDate: endDateTime
+            )
             
-            // Seyahati kaydettikten sonra bildirim gönderme
-            scheduleNotification(for: newTrip)
-            
-            // Arka plan görevini planla
-            scheduleBackgroundTask()
-
-            presentationMode.wrappedValue.dismiss() // Kaydedildikten sonra önceki ekrana yönlendirme
+            // Seyahat kaydedildikten sonra önceki sayfaya geç
+            presentationMode.wrappedValue.dismiss()
         } catch {
             print("Failed to save trip: \(error.localizedDescription)")
         }
     }
 
+
+    
+    // Tarih ve saati birleştiren yardımcı fonksiyon
+    func combineDateAndTime(date: Date, time: Date) -> Date {
+        let calendar = Calendar.current
+        let timeZone = TimeZone.current // Yerel saat dilimi
+
+        // Kullanıcının yerel saat diliminden tarih bileşenlerini al
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+
+        // Zaman bileşenlerini tarih bileşenleriyle birleştir
+        var combinedComponents = DateComponents()
+        combinedComponents.year = dateComponents.year
+        combinedComponents.month = dateComponents.month
+        combinedComponents.day = dateComponents.day
+        combinedComponents.hour = timeComponents.hour
+        combinedComponents.minute = timeComponents.minute
+
+        // Yerel saat diliminde Date nesnesi oluştur
+        if let combinedDate = calendar.date(from: combinedComponents) {
+            return combinedDate // Yerel saatte döndür
+        } else {
+            fatalError("Tarih birleştirilemedi.")
+        }
+    }
+
+    
     private func saveImageToDocumentsDirectory(image: UIImage, imageName: String) -> String? {
         guard let data = image.pngData() else { return nil }
-
+        
         let fileManager = FileManager.default
         let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let fileURL = documentsDirectory.appendingPathComponent(imageName)
-
+        
         do {
             try data.write(to: fileURL)
             return fileURL.lastPathComponent
@@ -156,85 +206,6 @@ struct AddTripView: View {
             return nil
         }
     }
-    
-    // Arka plan görevi için bildirim izni isteme
-    func requestNotificationPermission() {
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
-                print("Bildirim izni verildi.")
-            } else {
-                print("Bildirim izni reddedildi.")
-            }
-        }
-    }
-    
-    // Arka plan görevi kaydetme
-    func scheduleBackgroundTask() {
-        let request = BGAppRefreshTaskRequest(identifier: "com.myapp.refresh")
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 3600) // 1 saat sonra çalıştır
-        do {
-            try BGTaskScheduler.shared.submit(request)
-        } catch {
-            print("Arka plan görevi planlanamadı: \(error.localizedDescription)")
-        }
-    }
-    
-    // Seyahat için bildirim gönderme
-    func scheduleNotification(for trip: TripEntity) {
-        let content = UNMutableNotificationContent()
-        content.title = "Seyahat Hatırlatması"
-        content.body = "Seyahatiniz \(trip.name ?? "isimlendirilmemiş") başlıyor!"
-        content.sound = .default
-
-        guard let startDate = trip.startDate else { return }
-
-        // Seyahatin başlangıç tarihinden 1 gün önce bir bildirim planla
-        let notificationDate = Calendar.current.date(byAdding: .day, value: -1, to: startDate)
-        let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: notificationDate!)
-        
-        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
-        let request = UNNotificationRequest(identifier: trip.id?.uuidString ?? UUID().uuidString, content: content, trigger: trigger)
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Bildirim planlanırken hata oluştu: \(error.localizedDescription)")
-            }
-        }
-    }
-    
-    // Arka plan görevi için yapılacak işlemler
-    func handleBackgroundTask(_ task: BGAppRefreshTask) {
-        task.expirationHandler = {
-            // Görev zaman aşımına uğrarsa yapılacaklar
-        }
-
-        // Seyahatleri kontrol et ve gerekirse bildirimleri planla
-        scheduleNotificationsForUpcomingTrips()
-
-        task.setTaskCompleted(success: true)
-    }
-
-    // Seyahatler için bildirimleri planlama
-    func scheduleNotificationsForUpcomingTrips() {
-        let trips = fetchTrips() // CoreData'dan seyahatleri al
-        
-        for trip in trips {
-            scheduleNotification(for: trip) // Her bir seyahat için bildirim planla
-        }
-    }
-    
-    // Seyahatleri CoreData'dan almak
-    func fetchTrips() -> [TripEntity] {
-        let fetchRequest: NSFetchRequest<TripEntity> = TripEntity.fetchRequest()
-        
-        do {
-            let trips = try managedObjectContext.fetch(fetchRequest)
-            return trips
-        } catch {
-            print("Seyahatler alınırken hata oluştu: \(error.localizedDescription)")
-            return []
-        }
-    }
 }
+
 
