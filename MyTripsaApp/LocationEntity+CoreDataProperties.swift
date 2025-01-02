@@ -22,6 +22,7 @@ extension LocationEntity {
     @NSManaged public var locationDescription: String?
     @NSManaged public var longitude: Double
     @NSManaged public var name: String?
+    @NSManaged public var userID: String?
     @NSManaged public var trip: TripEntity?
     
     public var unwrappedName: String {
@@ -30,6 +31,10 @@ extension LocationEntity {
     
     public var unwrappedDate: Date {
         return date ?? Date()
+    }
+    
+    public var wrappedUserID: String {
+        userID ?? "Unkown ıd"
     }
     
     public var unwrappedlatitude: Double {

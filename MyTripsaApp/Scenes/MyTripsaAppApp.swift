@@ -16,7 +16,7 @@ import FirebaseFirestoreInternal
 struct MyTripsAppApp: App {
     init() {
         // Uygulama başladığında bildirim izni iste
-    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if granted {
                 print("Bildirim izni verildi")
             }
@@ -43,8 +43,36 @@ struct HomePageView: View {
     @State private var isThemePickerPresented: Bool = false
     @State private var selectedTheme: Theme = ThemeManager.shared.currentTheme
     private var notificationPublisher = NotificationCenter.default.publisher(for: .travelDateArrived)
+    @State private var isSignOutAlertPresented = false
     
-    @FetchRequest(sortDescriptors: []) var tripler: FetchedResults<TripEntity>
+    private var userId: String? {
+        guard let user = GIDSignIn.sharedInstance.currentUser else {
+            return nil
+        }
+        return user.userID
+    }
+    
+    // FetchRequest'i kullanıcı ID'sine göre filtrele
+    @FetchRequest private var tripler: FetchedResults<TripEntity>
+    
+    init() {
+        // Eğer kullanıcı girişi varsa, o kullanıcının seyahatlerini getir
+        let predicate: NSPredicate?
+        if let userId = GIDSignIn.sharedInstance.currentUser?.userID {
+            predicate = NSPredicate(format: "userID == %@", userId)
+        } else {
+            predicate = nil
+        }
+        
+        // FetchRequest'i oluştur
+        _tripler = FetchRequest(
+            entity: TripEntity.entity(),
+            sortDescriptors: [
+                NSSortDescriptor(keyPath: \TripEntity.startDate, ascending: true)
+            ],
+            predicate: predicate
+        )
+    }
     
     
     var body: some View {
@@ -73,7 +101,7 @@ struct HomePageView: View {
                         }
                         .onDelete(perform: deleteTrip)
                     }
-
+                    
                     // Add New Trip Button
                     NavigationLink(destination: AddTripView().environment(\.managedObjectContext, persistenceController.viewContext)) {
                         HStack {
@@ -102,6 +130,26 @@ struct HomePageView: View {
                 }
             }
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        isSignOutAlertPresented = true
+                    }) {
+                        Image(systemName: "power")
+                            .font(.title2)
+                            .foregroundColor(.red) // Çıkış butonunu vurgulamak için
+                    }
+                    .alert(isPresented: $isSignOutAlertPresented) {
+                        Alert(
+                            title: Text("Çıkış Yap"),
+                            message: Text("Emin misiniz?"),
+                            primaryButton: .destructive(Text("Çıkış Yap")) {
+                                signOutFromGoogle()
+                            },
+                            secondaryButton: .cancel(Text("İptal"))
+                        )
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         isThemePickerPresented = true
@@ -142,6 +190,36 @@ struct HomePageView: View {
         }
     }
     
+    func signOutFromGoogle() {
+        GIDSignIn.sharedInstance.signOut()
+        GIDSignIn.sharedInstance.disconnect { error in
+            if let error = error {
+                print("Error disconnecting: \(error)")
+            } else {
+                print("Successfully disconnected.")
+                navigateToLoginView()
+            }
+        }
+    }
+    
+    // LoginView'e geçiş için navigation fonksiyonu
+    func navigateToLoginView() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            let loginView = LoginView() // LoginView'inizi buraya tanımlayın
+            window.rootViewController = UIHostingController(rootView: loginView)
+            window.makeKeyAndVisible()
+        }
+    }
+    
+    func getUserID() -> String? {
+        guard let user = GIDSignIn.sharedInstance.currentUser else {
+            print("No user signed in")
+            return nil
+        }
+        return user.userID
+    }
+    
     private func deleteTrip(offsets: IndexSet) {
         withAnimation {
             offsets.map { tripler[$0] }.forEach { trip in
@@ -174,9 +252,9 @@ struct HomePageView: View {
     private func checkAndRevertColor(for trip: TripEntity, at index: Int) {
         let startDate = trip.wrappedStartDate
         let endDate = trip.wrappedEndDate
-
+        
         let today = Date()
-
+        
         if today >= startDate && today <= endDate {
             // Bugün startDate ve endDate arasında ise, rengi değiştir
             if highlightedTripIndex != index {
@@ -191,8 +269,8 @@ struct HomePageView: View {
             }
         }
     }
-
-
+    
+    
 }
 
 struct TripCardView: View {
@@ -218,7 +296,7 @@ struct TripCardView: View {
                     .clipped()
                     .cornerRadius(10)
             }
-
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(trip.wrappedName)
                     .font(.headline)
@@ -233,10 +311,10 @@ struct TripCardView: View {
         .background(isHighlighted ? Color.yellow : Color.white) // Change the color when highlighted
         .cornerRadius(10)
         .shadow(color: Color.gray.opacity(0.2), radius: 4, x: 0, y: 2)
-//        .onAppear {
-//            // Check and revert color when needed
-//            checkAndRevertColor(for: trip)
-//        }
+        //        .onAppear {
+        //            // Check and revert color when needed
+        //            checkAndRevertColor(for: trip)
+        //        }
     }
     
     private func fetchImageFromDocumentsDirectory(imageName: String) -> UIImage? {
@@ -258,17 +336,17 @@ struct TripCardView: View {
         return formatter.string(from: date)
     }
     
-//    private func checkAndRevertColor(for trip: TripEntity) {
-//        if let endDate = trip.wrappedEndDate as? Date {
-//            if Date() >= endDate {
-//                if highlightedTripIndex == index {
-//                    highlightedTripIndex = nil
-//                }
-//            }
-//        } else {
-//            print("Error: Invalid end date for trip: \(trip.wrappedName)")
-//        }
-//    }
+    //    private func checkAndRevertColor(for trip: TripEntity) {
+    //        if let endDate = trip.wrappedEndDate as? Date {
+    //            if Date() >= endDate {
+    //                if highlightedTripIndex == index {
+    //                    highlightedTripIndex = nil
+    //                }
+    //            }
+    //        } else {
+    //            print("Error: Invalid end date for trip: \(trip.wrappedName)")
+    //        }
+    //    }
 }
 
 

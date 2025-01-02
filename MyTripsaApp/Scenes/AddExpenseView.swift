@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import GoogleSignIn
 
 struct AddExpenseView: View {
     @Environment(\.presentationMode) var presentationMode // Sayfayı kapatmak için
@@ -71,24 +72,34 @@ struct AddExpenseView: View {
             return
         }
         
+        // Google SignIn ile kullanıcı ID'sini al
+        guard let userId = GIDSignIn.sharedInstance.currentUser?.userID else {
+            print("User not signed in!")
+            return
+        }
+
         let newExpense = ExpensesEntity(context: viewContext)
         newExpense.name = expenseName
         newExpense.amount = amount
         newExpense.category = selectedCategory
         newExpense.date = selectedDate
-        newExpense.trip = trips
+        newExpense.trip = trips // Trip ile ilişkilendir
+
+        // Kullanıcı ID'sini gider ile ilişkilendir
+        newExpense.userID = userId
+
         do {
             try viewContext.save()
-            print(newExpense.name)
-            presentationMode.wrappedValue.dismiss()
+            presentationMode.wrappedValue.dismiss() // Kaydetme işleminden sonra sayfayı kapat
             print("Gider başarıyla kaydedildi.")
         } catch {
             print("Gider kaydedilemedi: \(error.localizedDescription)")
         }
         
-        print("Gider Kaydedildi: \(expenseName), \(amount), \(selectedCategory), \(selectedDate)")
+        print("Gider Kaydedildi: \(expenseName), \(amount), \(selectedCategory), \(selectedDate), UserID: \(userId)")
         presentationMode.wrappedValue.dismiss()
     }
+
 }
 
 //struct AddExpenseView_Previews: PreviewProvider {

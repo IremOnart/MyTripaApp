@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import UserNotifications
+import GoogleSignIn
 
 struct AddTripView: View {
     @State private var tripName: String = ""
@@ -28,8 +29,6 @@ struct AddTripView: View {
                 Text("Yeni Seyahat Ekle")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .padding(.top)
-                
                 Form {
                     Section(header: Text("Seyahat Bilgileri")) {
                         TextField("Seyahat Adı", text: $tripName)
@@ -123,6 +122,14 @@ struct AddTripView: View {
             return
         }
         
+        // Kullanıcı ID'sini kontrol et
+        guard let userId = GIDSignIn.sharedInstance.currentUser?.userID else {
+            print("User not signed in")
+            return
+        }
+        
+        print(userId)
+        
         // Tarih ve saati birleştir
         let startDateTime = combineDateAndTime(date: startDate, time: startTime)
         let endDateTime = combineDateAndTime(date: endDate, time: endTime)
@@ -137,6 +144,7 @@ struct AddTripView: View {
         newTrip.name = tripName
         newTrip.startDate = startDateTime
         newTrip.endDate = endDateTime
+        newTrip.userID = userId
         
         if let selectedImage = selectedImage {
             let imageName = "\(UUID().uuidString).png"
@@ -158,6 +166,7 @@ struct AddTripView: View {
             presentationMode.wrappedValue.dismiss()
         } catch {
             print("Failed to save trip: \(error.localizedDescription)")
+            print("Detailed Error: \(error)")
         }
     }
     

@@ -13,7 +13,7 @@ struct TripDetailsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     let persistenceController = PersistenceController.shared
     @Environment(\.presentationMode) var presentationMode
-
+    
     var body: some View {
         VStack {
             // Header Section
@@ -26,7 +26,7 @@ struct TripDetailsView: View {
                     .foregroundColor(.gray)
             }
             .padding()
-
+            
             // TabView for Locations and Expenses
             TabView {
                 // Locations Tab
@@ -35,7 +35,7 @@ struct TripDetailsView: View {
                         .font(.title2)
                         .fontWeight(.semibold)
                         .padding(.top)
-
+                    
                     List {
                         ForEach(trip.locationsArray, id: \.self) { location in
                             NavigationLink(destination: LocationDetailsView(location: location).environment(\.managedObjectContext, persistenceController.viewContext)) {
@@ -72,31 +72,33 @@ struct TripDetailsView: View {
                 .tabItem {
                     Label("Konumlar", systemImage: "mappin.and.ellipse")
                 }
-
+                
                 // Expenses Tab
                 VStack {
                     Text("Giderler")
                         .font(.title2)
                         .fontWeight(.semibold)
                         .padding(.top)
-
+                    
                     List {
                         ForEach(trip.expensesArray, id: \.self) { expense in
-                            VStack(alignment: .leading) {
-                                Text(expense.unwrappedName)
-                                    .font(.headline)
-                                Text("$\(expense.unwrappedAmount, specifier: "%.2f")")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                Text(formatDate(expense.unwrappedDate))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                            NavigationLink(destination: ExpenseDetailView(expense: expense).environment(\.managedObjectContext, persistenceController.viewContext)) {
+                                VStack(alignment: .leading) {
+                                    Text(expense.unwrappedName)
+                                        .font(.headline)
+                                    Text("$\(expense.unwrappedAmount, specifier: "%.2f")")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                    Text(formatDate(expense.unwrappedDate))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.vertical, 4)
                             }
-                            .padding(.vertical, 4)
                         }
                         .onDelete(perform: deleteExpense)
                     }
-
+                    
                     NavigationLink(destination: AddExpenseView(trips: trip).environment(\.managedObjectContext, persistenceController.viewContext)) {
                         HStack {
                             Image(systemName: "plus")
@@ -117,9 +119,9 @@ struct TripDetailsView: View {
                 }
             }
         }
-//        .navigationBarTitleDisplayMode(.inline)
+        //        .navigationBarTitleDisplayMode(.inline)
     }
-
+    
     private func deleteLocation(offsets: IndexSet) {
         withAnimation {
             offsets.map { trip.locationsArray[$0] }.forEach { location in
@@ -128,7 +130,7 @@ struct TripDetailsView: View {
             saveContext()
         }
     }
-
+    
     private func deleteExpense(offsets: IndexSet) {
         withAnimation {
             offsets.map { trip.expensesArray[$0] }.forEach { expense in
@@ -137,7 +139,7 @@ struct TripDetailsView: View {
             saveContext()
         }
     }
-
+    
     private func saveContext() {
         do {
             try viewContext.save()
@@ -145,7 +147,7 @@ struct TripDetailsView: View {
             print("Veriler kaydedilemedi: \(error.localizedDescription)")
         }
     }
-
+    
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short

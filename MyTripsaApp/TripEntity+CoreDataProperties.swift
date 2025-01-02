@@ -21,14 +21,16 @@ extension TripEntity {
     @NSManaged public var name: String?
     @NSManaged public var startDate: Date?
     @NSManaged public var image: String?
+    @NSManaged public var userID: String?
     @NSManaged public var locations: NSSet?
     @NSManaged public var expenses: NSSet?
-    
     
     public var wrappedName: String {
         name ?? "Unkown name"
     }
-    
+    public var wrappedUserID: String {
+        userID ?? "Unkown ıd"
+    }
     public var wrappedId: UUID {
         id ?? UUID()
     }

@@ -21,10 +21,14 @@ extension ExpensesEntity {
     @NSManaged public var date: Date?
     @NSManaged public var id: UUID?
     @NSManaged public var name: String?
+    @NSManaged public var userID: String?
     @NSManaged public var trip: TripEntity?
     
     public var unwrappedName: String {
         return name ?? ""
+    }
+    public var wrappedUserID: String {
+        userID ?? "Unkown ıd"
     }
     public var unwrappedAmount: Double {
         return amount

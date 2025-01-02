@@ -8,6 +8,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import GoogleSignIn
 
 struct AddLocationView: View {
     @State private var region = MKCoordinateRegion(
@@ -71,23 +72,33 @@ struct AddLocationView: View {
             print("Location not selected!")
             return
         }
+        
+        // Google SignIn ile kullanıcı ID'sini al
+        guard let userId = GIDSignIn.sharedInstance.currentUser?.userID else {
+            print("User not signed in!")
+            return
+        }
 
         let newLocation = LocationEntity(context: viewContext)
         newLocation.name = name
         newLocation.locationDescription = description
         newLocation.latitude = selectedLocation.latitude
         newLocation.longitude = selectedLocation.longitude
-        newLocation.date = selectedDate // Save the selected date
-        newLocation.trip = trips // Associate this location with the selected trip
+        newLocation.date = selectedDate // Seçilen tarihi kaydet
+        newLocation.userID = userId // Kullanıcı ID'sini ilişkilendir
+
+        // Location ile Trip ilişkilendirme (Eğer trip ID var ise)
+        newLocation.trip = trips // trip ilişkisi varsa ilişkilendir
 
         do {
             try viewContext.save()
-            presentationMode.wrappedValue.dismiss() // Dismiss view after saving
+            presentationMode.wrappedValue.dismiss() // Kaydetme işleminden sonra sayfayı kapat
             print("Location saved successfully.")
         } catch {
             print("Failed to save location: \(error.localizedDescription)")
         }
     }
+
 }
 
 
