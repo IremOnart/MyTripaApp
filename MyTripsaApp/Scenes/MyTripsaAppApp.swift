@@ -38,6 +38,8 @@ struct HomePageView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.presentationMode) var presentationMode
     @State private var isLoading = false
+    @State private var isThemePickerPresented: Bool = false
+    @State private var selectedTheme: Theme = ThemeManager.shared.currentTheme
     
     @FetchRequest(sortDescriptors: []) var tripler: FetchedResults<TripEntity>
     
@@ -56,15 +58,13 @@ struct HomePageView: View {
                         .padding(.top)
                     
                     // Trips List
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            ForEach(tripler, id: \.self) { trip in
-                                NavigationLink(destination: TripDetailsView(trip: trip).environment(\.managedObjectContext, persistenceController.viewContext)) {
-                                    TripCardView(trip: trip)
-                                }
+                    List {
+                        ForEach(tripler, id: \.self) { trip in
+                            NavigationLink(destination: TripDetailsView(trip: trip).environment(\.managedObjectContext, persistenceController.viewContext)) {
+                                TripCardView(trip: trip)
                             }
                         }
-                        .padding(.horizontal)
+                        .onDelete(perform: deleteTrip)
                     }
                     
                     // Add New Trip Button
@@ -83,10 +83,21 @@ struct HomePageView: View {
                         .padding()
                     }
                 }
-            }.onAppear{
-//                fetchTrips()
             }
-            .navigationBarHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        isThemePickerPresented = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                    }
+                    .popover(isPresented: $isThemePickerPresented) {
+                        ThemePickerView(selectedTheme: $selectedTheme, isPresented: $isThemePickerPresented)
+                    }
+                }
+            }
+            
         }.onAppear {
             let api = GeoapifyAPI()
             let urlString = api.createAttractionURL(
@@ -114,30 +125,21 @@ struct HomePageView: View {
         }
     }
     
-    private func fetchTrips() {
-        isLoading = true
-        let request: NSFetchRequest<TripEntity> = TripEntity.fetchRequest()
-        
-        // Verilerin sıralanması
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \TripEntity.startDate, ascending: true)]
-        
-        do {
-            let tripEntities = try viewContext.fetch(request)
-            
-            // Core Data verilerini Trip struct'ına dönüştürme
-            trips = tripEntities.map { tripEntity in
-                Trip(
-                    id: tripEntity.id ?? UUID(), // Core Data'daki id'yi kullan
-                    name: tripEntity.name ?? "Bilinmiyor", // Name'yi al
-                    startDate: formatDate(tripEntity.startDate ?? Date()), // Tarih formatlama
-                    endDate: formatDate(tripEntity.endDate ?? Date()), // Tarih formatlama
-                    image: "defaultImage" // Görsel bilgisi
-                )
+    private func deleteTrip(offsets: IndexSet) {
+        withAnimation {
+            offsets.map { tripler[$0] }.forEach { trip in
+                viewContext.delete(trip)
             }
-        } catch {
-            print("Veriler çekilemedi: \(error.localizedDescription)")
+            saveContext()
         }
-        isLoading = false
+    }
+    
+    private func saveContext() {
+        do {
+            try viewContext.save()
+        } catch {
+            print("Veriler kaydedilemedi: \(error.localizedDescription)")
+        }
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -154,18 +156,29 @@ struct TripCardView: View {
     
     var body: some View {
         HStack {
-            Image("")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 80, height: 80)
-                .clipped()
-                .cornerRadius(10)
+            if let imageName = trip.image,
+               let image = fetchImageFromDocumentsDirectory(imageName: imageName) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 80, height: 80)
+                    .clipped()
+                    .cornerRadius(10)
+            } else {
+                Image(systemName: "photo")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 80, height: 80)
+                    .foregroundColor(.gray)
+                    .clipped()
+                    .cornerRadius(10)
+            }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(trip.wrappedName)
                     .font(.headline)
                     .fontWeight(.semibold)
-                Text("\(trip.wrappedStartDate) - \(trip.wrappedEndDate)")
+                Text("\(formatDate(trip.wrappedStartDate)) - \(formatDate(trip.wrappedEndDate))")
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
@@ -175,6 +188,29 @@ struct TripCardView: View {
         .background(Color.white)
         .cornerRadius(10)
         .shadow(color: Color.gray.opacity(0.2), radius: 4, x: 0, y: 2)
+    }
+    
+    private func fetchImageFromDocumentsDirectory(imageName: String) -> UIImage? {
+        let fileManager = FileManager.default
+        let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileURL = documentsDirectory.appendingPathComponent(imageName)
+        
+        if fileManager.fileExists(atPath: fileURL.path) {
+            return UIImage(contentsOfFile: fileURL.path)
+        } else {
+            print("Hata: Görsel bulunamadı - \(imageName)")
+            return nil
+        }
+    }
+    
+    func dataToBase64String(data: Data) -> String {
+        return data.base64EncodedString()
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter.string(from: date)
     }
 }
 

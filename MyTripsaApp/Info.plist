@@ -17,5 +17,9 @@
 	<string>Uygulamanızın konumunuza erişmesine izin verin.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Uygulama konumunuzu kullanacak.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fotoğraflarınıza erişim izni gereklidir</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Kamera kullanım izni gereklidir</string>
 </dict>
 </plist>

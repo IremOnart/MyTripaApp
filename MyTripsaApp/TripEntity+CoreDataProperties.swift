@@ -20,8 +20,10 @@ extension TripEntity {
     @NSManaged public var id: UUID?
     @NSManaged public var name: String?
     @NSManaged public var startDate: Date?
+    @NSManaged public var image: String?
     @NSManaged public var locations: NSSet?
     @NSManaged public var expenses: NSSet?
+    
     
     public var wrappedName: String {
         name ?? "Unkown name"
@@ -31,6 +33,9 @@ extension TripEntity {
     }
     public var wrappedEndDate: Date {
         endDate ?? Date()
+    }
+    public var wrappedImage: String {
+        image ?? "Unkown image"
     }
     
     public var locationsArray: [LocationEntity] {
