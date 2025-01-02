@@ -38,21 +38,22 @@ struct TripDetailsView: View {
 
                     List {
                         ForEach(trip.locationsArray, id: \.self) { location in
-                            VStack(alignment: .leading) {
-                                Text(location.unwrappedName)
-                                    .font(.headline)
-                                Text(location.unwrappedlocationDescription)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                Text(formatDate(location.unwrappedDate))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                            NavigationLink(destination: LocationDetailsView(location: location).environment(\.managedObjectContext, persistenceController.viewContext)) {
+                                VStack(alignment: .leading) {
+                                    Text(location.unwrappedName)
+                                        .font(.headline)
+                                    Text(location.unwrappedlocationDescription)
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                    Text(formatDate(location.unwrappedDate))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
-                            .padding(.vertical, 4)
                         }
                         .onDelete(perform: deleteLocation)
                     }
-
+                    
                     NavigationLink(destination: AddLocationView(trips: trip).environment(\.managedObjectContext, persistenceController.viewContext)) {
                         HStack {
                             Image(systemName: "plus")

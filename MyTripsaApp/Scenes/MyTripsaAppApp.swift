@@ -16,7 +16,7 @@ import FirebaseFirestoreInternal
 struct MyTripsAppApp: App {
     init() {
         // Uygulama başladığında bildirim izni iste
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if granted {
                 print("Bildirim izni verildi")
             }
@@ -31,12 +31,7 @@ struct MyTripsAppApp: App {
 }
 
 struct HomePageView: View {
-    // Sample Trips Data
-    @State private var trips: [Trip] = [
-        Trip(id: UUID(), name: "İtalya Gezisi", startDate: "15 Aralık 2024", endDate: "20 Aralık 2024", image: "italy"),
-        Trip(id: UUID(), name: "Paris Turu", startDate: "1 Ocak 2025", endDate: "5 Ocak 2025", image: "paris")
-    ]
-    @State private var userName: String = ""
+    @State private var highlightedTripIndex: Int? = nil
     var db = Firestore.firestore()
     var service: MyTripsaAppServiceProtocol = MyTripsaAppService()
     @State var nameCount: Int = 0
@@ -47,6 +42,7 @@ struct HomePageView: View {
     @State private var isLoading = false
     @State private var isThemePickerPresented: Bool = false
     @State private var selectedTheme: Theme = ThemeManager.shared.currentTheme
+    private var notificationPublisher = NotificationCenter.default.publisher(for: .travelDateArrived)
     
     @FetchRequest(sortDescriptors: []) var tripler: FetchedResults<TripEntity>
     
@@ -66,16 +62,20 @@ struct HomePageView: View {
                     
                     // Trips List
                     List {
-                        ForEach(tripler, id: \.self) { trip in
+                        ForEach(tripler.indices, id: \.self) { index in
+                            let trip = tripler[index]
                             NavigationLink(destination: TripDetailsView(trip: trip).environment(\.managedObjectContext, persistenceController.viewContext)) {
-                                TripCardView(trip: trip)
+                                TripCardView(trip: trip, isHighlighted: index == highlightedTripIndex)
+                                    .onAppear {
+                                        checkAndRevertColor(for: trip, at: index)
+                                    }
                             }
                         }
                         .onDelete(perform: deleteTrip)
                     }
-                    
+
                     // Add New Trip Button
-                    NavigationLink(destination: AddTripView(trips: $trips).environment(\.managedObjectContext, persistenceController.viewContext)) {
+                    NavigationLink(destination: AddTripView().environment(\.managedObjectContext, persistenceController.viewContext)) {
                         HStack {
                             Image(systemName: "plus")
                                 .font(.title)
@@ -88,6 +88,16 @@ struct HomePageView: View {
                         .foregroundColor(.white)
                         .cornerRadius(10)
                         .padding()
+                    }
+                }
+            } .onReceive(notificationPublisher) { notification in
+                if let userInfo = notification.userInfo,
+                   let index = userInfo["index"] as? Int,
+                   let isHighlighted = userInfo["highlighted"] as? Bool {
+                    if isHighlighted {
+                        highlightedTripIndex = index
+                    } else {
+                        highlightedTripIndex = nil
                     }
                 }
             }
@@ -125,7 +135,7 @@ struct HomePageView: View {
                             print("success")
                         }
                     }
-                    nameCount+=1
+                    nameCount += 1
                 }
             }
             UserDefaults.standard.set(nameCount, forKey: "nameCount")
@@ -149,17 +159,45 @@ struct HomePageView: View {
         }
     }
     
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        return formatter.string(from: date)
+    private func handleTripHighlight(notification: Notification) {
+        if let userInfo = notification.userInfo,
+           let index = userInfo["index"] as? Int,
+           let isHighlighted = userInfo["highlighted"] as? Bool {
+            if isHighlighted {
+                highlightedTripIndex = index
+            } else {
+                highlightedTripIndex = nil
+            }
+        }
     }
     
+    private func checkAndRevertColor(for trip: TripEntity, at index: Int) {
+        let startDate = trip.wrappedStartDate
+        let endDate = trip.wrappedEndDate
+
+        let today = Date()
+
+        if today >= startDate && today <= endDate {
+            // Bugün startDate ve endDate arasında ise, rengi değiştir
+            if highlightedTripIndex != index {
+                highlightedTripIndex = index
+                NotificationCenter.default.post(name: .travelDateArrived, object: nil, userInfo: ["index": index, "highlighted": true])
+            }
+        } else {
+            // Bugün startDate ve endDate arasında değilse, eski haline döndür
+            if highlightedTripIndex == index {
+                highlightedTripIndex = nil
+                NotificationCenter.default.post(name: .travelDateArrived, object: nil, userInfo: ["index": index, "highlighted": false])
+            }
+        }
+    }
+
+
 }
 
-// Trip Card View
 struct TripCardView: View {
     let trip: TripEntity
+    let isHighlighted: Bool
     
     var body: some View {
         HStack {
@@ -180,7 +218,7 @@ struct TripCardView: View {
                     .clipped()
                     .cornerRadius(10)
             }
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(trip.wrappedName)
                     .font(.headline)
@@ -192,9 +230,13 @@ struct TripCardView: View {
             Spacer()
         }
         .padding()
-        .background(Color.white)
+        .background(isHighlighted ? Color.yellow : Color.white) // Change the color when highlighted
         .cornerRadius(10)
         .shadow(color: Color.gray.opacity(0.2), radius: 4, x: 0, y: 2)
+//        .onAppear {
+//            // Check and revert color when needed
+//            checkAndRevertColor(for: trip)
+//        }
     }
     
     private func fetchImageFromDocumentsDirectory(imageName: String) -> UIImage? {
@@ -210,16 +252,25 @@ struct TripCardView: View {
         }
     }
     
-    func dataToBase64String(data: Data) -> String {
-        return data.base64EncodedString()
-    }
-    
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         return formatter.string(from: date)
     }
+    
+//    private func checkAndRevertColor(for trip: TripEntity) {
+//        if let endDate = trip.wrappedEndDate as? Date {
+//            if Date() >= endDate {
+//                if highlightedTripIndex == index {
+//                    highlightedTripIndex = nil
+//                }
+//            }
+//        } else {
+//            print("Error: Invalid end date for trip: \(trip.wrappedName)")
+//        }
+//    }
 }
+
 
 // Trip Model
 struct Trip: Identifiable {
@@ -231,9 +282,6 @@ struct Trip: Identifiable {
 }
 
 
-// Preview
-//struct HomePageView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        HomePageView()
-//    }
-//}
+extension Notification.Name {
+    static let travelDateArrived = Notification.Name("travelDateArrived")
+}

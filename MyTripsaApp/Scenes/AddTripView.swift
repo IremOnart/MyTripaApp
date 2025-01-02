@@ -15,7 +15,6 @@ struct AddTripView: View {
     @State private var endDate: Date = Date()
     @State private var startTime: Date = Date()
     @State private var endTime: Date = Date()
-    @Binding var trips: [Trip]
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.managedObjectContext) var managedObjectContext
     @State private var selectedImage: UIImage? = nil
@@ -156,19 +155,15 @@ struct AddTripView: View {
                 endDate: endDateTime
             )
             
-            // Seyahat kaydedildikten sonra önceki sayfaya geç
             presentationMode.wrappedValue.dismiss()
         } catch {
             print("Failed to save trip: \(error.localizedDescription)")
         }
     }
-
-
     
     // Tarih ve saati birleştiren yardımcı fonksiyon
     func combineDateAndTime(date: Date, time: Date) -> Date {
         let calendar = Calendar.current
-        let timeZone = TimeZone.current // Yerel saat dilimi
 
         // Kullanıcının yerel saat diliminden tarih bileşenlerini al
         let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)

@@ -31,7 +31,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                 print("Bildirim izni verilmedi.")
             }
         }
-
+        
         // UNUserNotificationCenter delegate'ini atama
         UNUserNotificationCenter.current().delegate = self
         
@@ -41,7 +41,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
         return GIDSignIn.sharedInstance.handle(url)
     }
-
+    
     func scheduleTripNotifications(tripId: UUID, tripName: String, startDate: Date, endDate: Date) {
         let startContent = UNMutableNotificationContent()
         startContent.title = "Seyahat Başlıyor"
@@ -78,11 +78,21 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     // Bildirim aktifken gösterilecek işlemler (üzerine tıklanmışsa)
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         print("Bildirim tıklandı: \(response.notification.request.content.title)")
+        // Seyahat tarihi geldiğinde NotificationCenter'a bildirim gönder
+        if response.notification.request.content.title == "Seyahat Başlıyor" {
+            NotificationCenter.default.post(name: .travelDateArrived, object: nil)
+        }
         completionHandler()
     }
-
+    
     // Uygulama aktifken bildirimler geldiğinde yukarıdan gösterilsin
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        print("Bildirim geldi: \(notification.request.content.title)")
+        
+        // Seyahat tarihi geldiğinde NotificationCenter'a bildirim gönder
+        if notification.request.content.title == "Seyahat Başlıyor" {
+            NotificationCenter.default.post(name: .travelDateArrived, object: nil)
+        }
         completionHandler([.banner, .sound])
     }
     
@@ -93,7 +103,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             self.handleBackgroundTask(task as! BGAppRefreshTask)
         }
     }
-
+    
     private func handleBackgroundTask(_ task: BGAppRefreshTask) {
         // Arka plan görevini işleme al
         task.expirationHandler = {
