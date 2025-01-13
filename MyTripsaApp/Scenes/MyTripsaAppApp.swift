@@ -25,7 +25,7 @@ struct MyTripsAppApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            SplashView()
         }
     }
 }
@@ -56,6 +56,15 @@ struct HomePageView: View {
     @FetchRequest private var tripler: FetchedResults<TripEntity>
     
     init() {
+        // Set up the navigation bar appearance
+        let appearance = UINavigationBarAppearance()
+//        appearance.backgroundColor = UIColor(hex: "#FFC83D")// Set the background color
+//        UINavigationBar.appearance().titleTextAttributes = [
+//            .foregroundColor: UIColor(hex: "#FFC83D", alpha: 1.0) // Ensure full opacity
+//        ]
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
         // Eğer kullanıcı girişi varsa, o kullanıcının seyahatlerini getir
         let predicate: NSPredicate?
         if let userId = GIDSignIn.sharedInstance.currentUser?.userID {
@@ -83,10 +92,10 @@ struct HomePageView: View {
                         .padding()
                 } else {
                     // Title
-                    Text("Seyahatlerim")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .padding(.top)
+//                    Text("Seyahatlerim")
+//                        .font(.title)
+//                        .fontWeight(.bold)
+//                        .padding(.top)
                     
                     // Trips List
                     List {
@@ -97,10 +106,10 @@ struct HomePageView: View {
                                     .onAppear {
                                         checkAndRevertColor(for: trip, at: index)
                                     }
-                            }
+                            }.listRowBackground(Color.clear)
                         }
                         .onDelete(perform: deleteTrip)
-                    }
+                    }.listStyle(PlainListStyle())
                     
                     // Add New Trip Button
                     NavigationLink(destination: AddTripView().environment(\.managedObjectContext, persistenceController.viewContext)) {
@@ -112,56 +121,60 @@ struct HomePageView: View {
                         }
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color.blue)
+                        .background(Color(hex: "#1DAEDE"))
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(20)
                         .padding()
+                        .padding(.bottom, 32)
                     }
                 }
-            } .onReceive(notificationPublisher) { notification in
-                if let userInfo = notification.userInfo,
-                   let index = userInfo["index"] as? Int,
-                   let isHighlighted = userInfo["highlighted"] as? Bool {
-                    if isHighlighted {
-                        highlightedTripIndex = index
-                    } else {
-                        highlightedTripIndex = nil
+            }.navigationTitle("Seyahatlerim")
+                .onReceive(notificationPublisher) { notification in
+                    if let userInfo = notification.userInfo,
+                       let index = userInfo["index"] as? Int,
+                       let isHighlighted = userInfo["highlighted"] as? Bool {
+                        if isHighlighted {
+                            highlightedTripIndex = index
+                        } else {
+                            highlightedTripIndex = nil
+                        }
                     }
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        isSignOutAlertPresented = true
-                    }) {
-                        Image(systemName: "power")
-                            .font(.title2)
-                            .foregroundColor(.red) // Çıkış butonunu vurgulamak için
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: {
+                            isSignOutAlertPresented = true
+                        }) {
+                            Image(systemName: "power")
+                                .font(.title2)
+                                .foregroundColor(.red) // Çıkış butonunu vurgulamak için
+                                .padding()
+                        }
+                        .alert(isPresented: $isSignOutAlertPresented) {
+                            Alert(
+                                title: Text("Çıkış Yap"),
+                                message: Text("Emin misiniz?"),
+                                primaryButton: .destructive(Text("Çıkış Yap")) {
+                                    signOutFromGoogle()
+                                },
+                                secondaryButton: .cancel(Text("İptal"))
+                            )
+                        }
                     }
-                    .alert(isPresented: $isSignOutAlertPresented) {
-                        Alert(
-                            title: Text("Çıkış Yap"),
-                            message: Text("Emin misiniz?"),
-                            primaryButton: .destructive(Text("Çıkış Yap")) {
-                                signOutFromGoogle()
-                            },
-                            secondaryButton: .cancel(Text("İptal"))
-                        )
+                    
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            isThemePickerPresented = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.title2)
+                                .padding()
+                        }
+                        .popover(isPresented: $isThemePickerPresented) {
+                            ThemePickerView(selectedTheme: $selectedTheme, isPresented: $isThemePickerPresented)
+                        }
                     }
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isThemePickerPresented = true
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.title2)
-                    }
-                    .popover(isPresented: $isThemePickerPresented) {
-                        ThemePickerView(selectedTheme: $selectedTheme, isPresented: $isThemePickerPresented)
-                    }
-                }
-            }
             
         }.onAppear {
             let api = GeoapifyAPI()
@@ -307,14 +320,10 @@ struct TripCardView: View {
             }
             Spacer()
         }
-        .padding()
+        //        .padding()
         .background(isHighlighted ? Color.yellow : Color.white) // Change the color when highlighted
         .cornerRadius(10)
         .shadow(color: Color.gray.opacity(0.2), radius: 4, x: 0, y: 2)
-        //        .onAppear {
-        //            // Check and revert color when needed
-        //            checkAndRevertColor(for: trip)
-        //        }
     }
     
     private func fetchImageFromDocumentsDirectory(imageName: String) -> UIImage? {
@@ -335,18 +344,6 @@ struct TripCardView: View {
         formatter.dateStyle = .short
         return formatter.string(from: date)
     }
-    
-    //    private func checkAndRevertColor(for trip: TripEntity) {
-    //        if let endDate = trip.wrappedEndDate as? Date {
-    //            if Date() >= endDate {
-    //                if highlightedTripIndex == index {
-    //                    highlightedTripIndex = nil
-    //                }
-    //            }
-    //        } else {
-    //            print("Error: Invalid end date for trip: \(trip.wrappedName)")
-    //        }
-    //    }
 }
 
 
@@ -363,3 +360,23 @@ struct Trip: Identifiable {
 extension Notification.Name {
     static let travelDateArrived = Notification.Name("travelDateArrived")
 }
+
+// UIColor extension to handle hex color
+extension UIColor {
+    convenience init(hex: String, alpha: CGFloat = 1.0) {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+        
+        var rgb: UInt64 = 0
+        
+        Scanner(string: hexSanitized).scanHexInt64(&rgb)
+        
+        let r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
+        let g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
+        let b = CGFloat(rgb & 0x0000FF) / 255.0
+        
+        self.init(red: r, green: g, blue: b, alpha: alpha)
+    }
+}
+
+

@@ -28,5 +28,12 @@
 	</array>
 	<key>Privacy - Notifications Usage Description</key>
 	<string>Seyahat hatırlatmaları için bildirim izni gereklidir</string>
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.usernotifications.service</string>
+		<key>NSExtensionPrincipalClass</key>
+		<string>$(PRODUCT_MODULE_NAME).NotificationService</string>
+	</dict>
 </dict>
 </plist>

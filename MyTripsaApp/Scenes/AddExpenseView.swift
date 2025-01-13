@@ -56,13 +56,6 @@ struct AddExpenseView: View {
                 }
             }
             .navigationTitle("Yeni Gider Ekle")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Vazgeç") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            }
         }
     }
     

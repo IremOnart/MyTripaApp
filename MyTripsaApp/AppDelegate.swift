@@ -47,18 +47,35 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         startContent.title = "Seyahat Başlıyor"
         startContent.body = "\(tripName) seyahatiniz başlıyor!"
         startContent.sound = .default
+        startContent.launchImageName = "appicon2"
         
         let endContent = UNMutableNotificationContent()
         endContent.title = "Seyahat Bitiyor"
         endContent.body = "\(tripName) seyahatiniz sona eriyor!"
         endContent.sound = .default
         
+        // App ikonunu bildirimde eklemek için attachment oluştur
+        if let imageURL = Bundle.main.url(forResource: "appicon2", withExtension: "png") {
+            do {
+                let startAttachment = try UNNotificationAttachment(identifier: "startImageAttachment", url: imageURL, options: nil)
+                startContent.attachments = [startAttachment]
+                
+                let endAttachment = try UNNotificationAttachment(identifier: "endImageAttachment", url: imageURL, options: nil)
+                endContent.attachments = [endAttachment]
+            } catch {
+                print("Error creating attachment: \(error)")
+            }
+        }
+        
+        // Başlangıç ve bitiş tarihinden dateComponents oluştur
         let startComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: startDate)
         let endComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: endDate)
         
+        // Bildirim tetikleyicileri oluştur
         let startTrigger = UNCalendarNotificationTrigger(dateMatching: startComponents, repeats: false)
         let endTrigger = UNCalendarNotificationTrigger(dateMatching: endComponents, repeats: false)
         
+        // Bildirim taleplerini oluştur
         let startRequest = UNNotificationRequest(
             identifier: "trip-start-\(tripId.uuidString)",
             content: startContent,
@@ -71,8 +88,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             trigger: endTrigger
         )
         
-        UNUserNotificationCenter.current().add(startRequest)
-        UNUserNotificationCenter.current().add(endRequest)
+        // Bildirimleri ekle
+        UNUserNotificationCenter.current().add(startRequest) { error in
+            if let error = error {
+                print("Error adding start notification: \(error)")
+            }
+        }
+        
+        UNUserNotificationCenter.current().add(endRequest) { error in
+            if let error = error {
+                print("Error adding end notification: \(error)")
+            }
+        }
     }
     
     // Bildirim aktifken gösterilecek işlemler (üzerine tıklanmışsa)

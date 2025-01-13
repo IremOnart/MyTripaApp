@@ -27,15 +27,30 @@ class NotificationManager: ObservableObject {
     func scheduleTripNotifications(tripId: UUID, tripName: String, startDate: Date, endDate: Date) {
         // Seyahat başlangıç bildirimi içeriği
         let startContent = UNMutableNotificationContent()
+        startContent.launchImageName = "appicon2"
         startContent.title = "Seyahat Başlıyor"
         startContent.body = "\(tripName) seyahatiniz başlıyor!"
         startContent.sound = .default
         
         // Seyahat bitiş bildirimi içeriği
         let endContent = UNMutableNotificationContent()
+        endContent.launchImageName = "appicon2"
         endContent.title = "Seyahat Bitiyor"
         endContent.body = "\(tripName) seyahatiniz sona eriyor!"
         endContent.sound = .default
+        
+        // App ikonunu bildirimde eklemek için attachment oluştur
+        if let imageURL = Bundle.main.url(forResource: "appicon2", withExtension: "png") {
+            do {
+                let startAttachment = try UNNotificationAttachment(identifier: "startImageAttachment", url: imageURL, options: nil)
+                startContent.attachments = [startAttachment]
+                
+                let endAttachment = try UNNotificationAttachment(identifier: "endImageAttachment", url: imageURL, options: nil)
+                endContent.attachments = [endAttachment]
+            } catch {
+                print("Error creating attachment: \(error)")
+            }
+        }
         
         // Tam tarih ve saat için bileşenleri al
         let startComponents = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: startDate)

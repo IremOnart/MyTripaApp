@@ -31,10 +31,5 @@
         <attribute name="userID" optional="YES" attributeType="String"/>
         <relationship name="expenses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="ExpensesEntity" inverseName="trip" inverseEntity="ExpensesEntity"/>
         <relationship name="locations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="LocationEntity" inverseName="trip" inverseEntity="LocationEntity"/>
-        <uniquenessConstraints>
-            <uniquenessConstraint>
-                <constraint value="name"/>
-            </uniquenessConstraint>
-        </uniquenessConstraints>
     </entity>
 </model>

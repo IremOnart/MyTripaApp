@@ -27,30 +27,35 @@ struct AddTripView: View {
         NavigationView {
             VStack {
                 Text("Yeni Seyahat Ekle")
-                    .font(.largeTitle)
+                    .font(.title)
                     .fontWeight(.bold)
                 Form {
                     Section(header: Text("Seyahat Bilgileri")) {
                         TextField("Seyahat Adı", text: $tripName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
                         
                         // Başlangıç tarihi ve saati
                         DatePicker("Başlangıç Tarihi",
                                    selection: $startDate,
                                    displayedComponents: .date).environment(\.timeZone, TimeZone.current)
+                            .padding()
                         
                         DatePicker("Başlangıç Saati",
                                    selection: $startTime,
                                    displayedComponents: .hourAndMinute).environment(\.timeZone, TimeZone.current)
+                            .padding()
                         
                         // Bitiş tarihi ve saati
                         DatePicker("Bitiş Tarihi",
                                    selection: $endDate,
                                    displayedComponents: .date).environment(\.timeZone, TimeZone.current)
+                            .padding()
                         
                         DatePicker("Bitiş Saati",
                                    selection: $endTime,
                                    displayedComponents: .hourAndMinute).environment(\.timeZone, TimeZone.current)
+                            .padding()
                     }
                     
                     // Mevcut görsel seçici bölümü aynı kalacak
@@ -91,8 +96,8 @@ struct AddTripView: View {
                             }, isImagePickerPresented: $isImagePickerPresented)
                         }
                     }
-                }
-                .frame(maxHeight: 500)
+                }.cornerRadius(20)
+//                .frame(maxHeight: 500)
                 
                 Button(action: {
                     saveTrip()
@@ -211,5 +216,7 @@ struct AddTripView: View {
         }
     }
 }
-
+//#Preview {
+//    AddTripView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+//}
 

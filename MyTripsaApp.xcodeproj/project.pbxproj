@@ -10,6 +10,19 @@
 		A21DFF21977A8C8FAFBAA9B9 /* Pods_MyTripsaApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 57EF3184603BFD9F9D39C926 /* Pods_MyTripsaApp.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		5D60FF072D29638400BCEBD0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		2A776C402B34A6CEBF0712D7 /* Pods-MyTripsaApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyTripsaApp.debug.xcconfig"; path = "Target Support Files/Pods-MyTripsaApp/Pods-MyTripsaApp.debug.xcconfig"; sourceTree = "<group>"; };
 		4789A8D867EFB262EB320EB6 /* Pods-MyTripsaApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyTripsaApp.release.xcconfig"; path = "Target Support Files/Pods-MyTripsaApp/Pods-MyTripsaApp.release.xcconfig"; sourceTree = "<group>"; };
@@ -109,6 +122,7 @@
 				5DFA6B492D0F6A27007CC4E3 /* Frameworks */,
 				5DFA6B4A2D0F6A27007CC4E3 /* Resources */,
 				5B61976D55D2C8E13C9052DC /* [CP] Embed Pods Frameworks */,
+				5D60FF072D29638400BCEBD0 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -129,7 +143,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1610;
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1610;
 				TargetAttributes = {
 					5DFA6B4B2D0F6A27007CC4E3 = {
